@@ -1,39 +1,120 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import { useRoleStore } from '@/shared/stores/useRoleStore';
+import "react-native-reanimated";
+import {
+  Manrope_400Regular,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+} from "@expo-google-fonts/manrope";
+import { useAuthStore } from '@/shared/stores/useAuthStore';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Toast, { BaseToast, ToastProps, ErrorToast } from 'react-native-toast-message';
+import { COLOR_VARIABLES } from '@/constants/theme/ColorVariables';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+const toastConfig = {
+  success: (props: ToastProps) => (
+    <BaseToast
+      {...props}
+      style={{ 
+        borderLeftColor: COLOR_VARIABLES.surfaceGen,
+        borderLeftWidth: 5,
+        backgroundColor: COLOR_VARIABLES.surfacePrimary
+      }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{
+        fontSize: 15,
+        fontFamily: 'ManropeSemiBold',
+        color: COLOR_VARIABLES.textSurfaceGen
+      }}
+      text2Style={{
+        fontSize: 13,
+        fontFamily: 'ManropeRegular',
+        color: COLOR_VARIABLES.greyedOutText,
+      }}
+    />
+  ),
+  error: (props: ToastProps) => (
+    <BaseToast
+      {...props}
+      style={{ 
+        borderLeftColor: COLOR_VARIABLES.dangerText,
+        borderLeftWidth: 5,
+        backgroundColor: COLOR_VARIABLES.surfacePrimary
+      }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{
+        fontSize: 15,
+        fontFamily: 'ManropeSemiBold',
+        color: COLOR_VARIABLES.textSurfaceGen
+      }}
+      text2Style={{
+        fontSize: 13,
+        fontFamily: 'ManropeRegular',
+        color: COLOR_VARIABLES.greyedOutText,
+      }}
+    />
+  )
+};
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+export { ErrorBoundary } from "expo-router";
+
+// Prevent splash screen from hiding too soon
 SplashScreen.preventAutoHideAsync();
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const [fontsLoaded, error] = useFonts({
+    ManropeRegular: Manrope_400Regular,
+    ManropeSemiBold: Manrope_600SemiBold,
+    ManropeBold: Manrope_700Bold,
   });
+  const { selectedRole } = useRoleStore();
+  const { isAuthenticated } = useAuthStore();
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded]);
 
-  if (!loaded) {
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="onboarding" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen 
+          name="(client)" 
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen 
+          name="(worker)" 
+          options={{
+            headerShown: false,
+          }}
+        />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+      <Toast config={toastConfig} />
+    </QueryClientProvider>
   );
 }
