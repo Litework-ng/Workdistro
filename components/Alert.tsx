@@ -44,7 +44,7 @@ export const Alert: React.FC<AlertProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={styles.overlay} >
         <View style={styles.container}>
           <Pressable style={styles.content} onPress={e => e.stopPropagation()}>
             {/* Header with optional back icon */}
@@ -128,14 +128,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   title: {
-    ...TEXT_STYLES.subtitle,
+    ...TEXT_STYLES.subHeader,
     color: COLOR_VARIABLES.textSurfaceGen,
     marginBottom: SPACING.xs,
     textAlign: 'center',
   },
   description: {
-    ...TEXT_STYLES.body,
-    color: COLOR_VARIABLES.textLight,
+    ...TEXT_STYLES.description,
+
     textAlign: 'center',
   },
   actions: {

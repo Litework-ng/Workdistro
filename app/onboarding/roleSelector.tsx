@@ -19,15 +19,15 @@ const RoleSelector = () => {
         <TouchableOpacity
           style={[
             styles.roleButton,
-            selectedRole === 'client' && styles.activeRoleButton,
+            selectedRole === 'worker' && styles.activeRoleButton,
           ]}
-          onPress={() => setSelectedRole('client')}
+          onPress={() => setSelectedRole('worker')}
         >
         <Construction width={50} height={50} />
           <Text
             style={[
               styles.roleText,
-              selectedRole === 'client' && styles.activeRoleText,
+              selectedRole === 'worker' && styles.activeRoleText,
             ]}
           >
             As A Worker
@@ -37,15 +37,15 @@ const RoleSelector = () => {
         <TouchableOpacity
           style={[
             styles.roleButton,
-            selectedRole === 'worker' && styles.activeRoleButton,
+            selectedRole === 'client' && styles.activeRoleButton,
           ]}
-          onPress={() => setSelectedRole('worker')}
+          onPress={() => setSelectedRole('client')}
         >
         <PersonSearch width={50} height={50} />
           <Text
             style={[
               styles.roleText,
-              selectedRole === 'worker' && styles.activeRoleText,
+              selectedRole === 'client' && styles.activeRoleText,
             ]}
           >
             To Find A Worker

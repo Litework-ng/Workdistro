@@ -23,7 +23,7 @@ export const authService = {
     return response.data;
   },
   
-  sendOtp: async ({ phone_number }: { phone_number: string }) => {
+  sendOtp: async ({ email }: { email: string }) => {
     const response = await api.post('send-otp/', { phone_number });
     return response.data;
   },

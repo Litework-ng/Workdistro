@@ -59,7 +59,7 @@ const registerMutation = useMutation({
       const phoneNumber = data.user.phone_number;
       console.log('Sending OTP to phone number:', phoneNumber);
       // Send OTP
-      await authService.sendOtp({ phone_number: phoneNumber });
+      await authService.sendOtp({ email: phoneNumber });
 
       
       Toast.show({
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   logo: {
-    marginBottom: SPACING.xxl,
+    marginBottom: SPACING.alt,
     alignSelf: 'center',
   },
   title: {

@@ -16,11 +16,11 @@ import { SPACING } from '@/constants/theme/Spacing';
 import Input from '@/components/InputField';
 import Button from '@/components/Button';
 import { Alert } from '@/components/Alert';
-import { serviceService } from '@/services/service';
-import SearchIcon from '@/assets/icons/Search.svg';
 import ArrowBack from '@/assets/icons/ArrowBack.svg';
 import { Service } from '@/shared/types/service';
-
+import { serviceService } from '@/services/services';
+import  Header  from '@/components/Header';
+import SearchIcon from '@/assets/icons/Search.svg';
 const popularServices = [
   { id: 1, name: 'Grocery Shopping' },
   { id: 2, name: 'Item Delivery' },
@@ -73,12 +73,7 @@ export default function SelectServiceScreen() {
       style={styles.container}
     >
       <View style={styles.header}>
-        <Button
-          variant="icon"
-          icon={<ArrowBack />}
-          onPress={() => router.back()}
-        />
-        <Text style={styles.title}>Select Your Service</Text>
+        <Header title="Select Service" />
       </View>
 
       <View style={styles.searchContainer}>

@@ -18,7 +18,9 @@ import OnboardingOne from "@/assets/icons/OnboardingOne.svg";
 import OnboardingTwo from "@/assets/icons/OnboardingTwo.svg";
 import Copy from "@/assets/icons/Copy.svg";
 import Frame from "@/assets/icons/Frame.svg";
+import Lice from "@/assets/icons/SlideImg1.svg"
 import Live from "@/assets/icons/Live.svg";
+import Kopo from "@/assets/icons/Kopo.svg";
 import See from "@/assets/icons/See.svg";
 import Flat from "@/assets/icons/Flat.svg";
 import Button from "@/components/Button";
@@ -91,12 +93,12 @@ const OnboardingScreen = () => {
 
   const slides = [
     {
-      icon: <Flat width={300} height={300} />,
+      icon: <Lice width={300} height={300} />,
       title: "Delegate Tasks The Easy Way",
       description: "Find handy workers to help with your tasks, whatever they are, wherever you are.",
     },
     {
-      icon: <Frame width={300} height={300} />,
+      icon: <Kopo width={300} height={300} />,
       title: "Turn Your Skills To Earnings",
       description: "Connect with people who need your skills close to you.",
     },

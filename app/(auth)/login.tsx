@@ -21,6 +21,7 @@ import See from '@/assets/icons/See.svg';
 import { authService } from '@/services/auth';
 import { useAuthStore } from '@/shared/stores/useAuthStore';
 import { useRoleStore } from '@/shared/stores/useRoleStore';
+import { serviceService } from '@/services/services';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -41,7 +42,7 @@ export default function LoginScreen() {
 
   const loginMutation = useMutation({
     mutationFn: authService.login,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Set auth token
       setAuth(data.access_token);
 
@@ -56,12 +57,17 @@ export default function LoginScreen() {
 
       // Navigate based on role
       if (selectedRole === 'worker') {
-        router.replace('/(worker)/home');
+        const services = await serviceService.getServices();
+        if (services.length > 0) {
+          router.replace('/(worker)/home');
+        } else {
+          router.replace('/onboarding/selectService');
+        }
       } else {
         router.replace('/(client)/home');
       }
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
@@ -69,6 +75,19 @@ export default function LoginScreen() {
         position: 'top',
         visibilityTime: 4000,
       });
+
+       // Navigate based on role
+       if (selectedRole === 'worker') {
+        const services = await serviceService.getServices();
+        if (services.length > 0) {
+          router.replace('/onboarding/selectService');
+        } else {
+          router.replace('/onboarding/selectService');
+        }
+      } else {
+        router.replace('/(client)/home');
+      }
+    
     },
   });
 
@@ -85,7 +104,6 @@ export default function LoginScreen() {
         <View style={styles.header}>
           <See style={styles.logo} width={230} height={48} />
           <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>Login to continue</Text>
         </View>
 
         <Formik
@@ -179,20 +197,20 @@ const styles = StyleSheet.create({
   header: {
     marginTop: SPACING.xl,
     marginBottom: SPACING.xl,
-    alignItems: 'center',
+    
   },
   logo: {
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.xxl,
+    alignSelf:'center',
   },
   title: {
     ...TEXT_STYLES.h1,
     color: COLOR_VARIABLES.textSurfaceGen,
     marginBottom: SPACING.xs,
+    textAlign:'left',
+   
   },
-  subtitle: {
-    ...TEXT_STYLES.body,
-    color: COLOR_VARIABLES.textLight,
-  },
+
   form: {
     gap: SPACING.md,
   },
@@ -200,7 +218,7 @@ const styles = StyleSheet.create({
     ...TEXT_STYLES.body,
     color: COLOR_VARIABLES.textsurfaceSecondary,
     textAlign: 'right',
-    marginTop: SPACING.xs,
+    
   },
   footer: {
     gap: SPACING.md,

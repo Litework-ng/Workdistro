@@ -65,6 +65,8 @@ export default function VerifyOtpScreen() {
         position: 'top',
         visibilityTime: 4000,
       });
+      setShowSuccessAlert(true);
+      console.log(selectedRole)
     },
   });
 

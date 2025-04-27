@@ -44,7 +44,7 @@ export const TEXT_STYLES = {
 
   subHeader: {
     fontSize: FONT_SIZE.xl,
-    fontFamily:'ManropeBold',
+    fontFamily:FONT_FAMILY.title,
     color: COLOR_VARIABLES.textSurfacePrimary,
   },
   body: {
