@@ -6,7 +6,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -17,6 +17,7 @@ import { TEXT_STYLES } from '@/constants/theme/Typography';
 import { SPACING } from '@/constants/theme/Spacing';
 import Button from '@/components/Button';
 import Input from '@/components/InputField';
+import PhoneNumberInput from '@/components/PhoneNumberInput';
 import See from '@/assets/icons/See.svg';
 import { useMutation } from '@tanstack/react-query';
 import { authService } from '@/services/auth';
@@ -29,13 +30,11 @@ const validationSchema = Yup.object().shape({
     .max(50, 'Name is too long')
     .matches(/^[a-zA-Z\s]*$/, 'Name can only contain letters and spaces')
     .matches(/^[a-zA-Z].*[a-zA-Z]$/, 'Name must start and end with letters')
-    .matches(/^[a-zA-Z]+\s+[a-zA-Z]+/, 'Please enter both first and last name')
-    .required('Name is required'),
-  phone_number: Yup.string()
-    .min(11, 'Phone number must be 11 digits')
-    .max(11, 'Phone number must be 11 digits')
-    .matches(/^[0-9]+$/, 'Phone number must only contain digits')
-    .required('Phone is required'),
+    .matches(/^[a-zA-Z]+\s+[a-zA-Z]+/, 'Please enter both first and last name'),
+
+    phone_number: Yup.string()
+    .matches(/^\+234[0-9]{10}$/, 'Phone number must start with +234 and be 13 digits in total')
+    .required('Phone number is required'),
   email: Yup.string()
     .email('Invalid email')
     .required('Email is required'),
@@ -52,30 +51,28 @@ export default function RegisterScreen() {
  
 // Update the registerMutation
 const registerMutation = useMutation({
-  mutationFn: authService.register,
-  onSuccess: async (data) => {
+  mutationFn: authService.sendOtp,
+  onSuccess: async (data, variables) => {
     try {
+      const { email } = variables;
+      console.log('Sending OTP to email:', email);
 
-      const phoneNumber = data.user.phone_number;
-      console.log('Sending OTP to phone number:', phoneNumber);
-      // Send OTP
-      await authService.sendOtp({ email: phoneNumber });
-
-      
       Toast.show({
         type: 'success',
-        text1: 'Registration Successful',
-        text2: 'Please verify your phone number',
+        text1: 'OTP Sent',
+        text2: 'Please check your email for verification code',
         position: 'top',
         visibilityTime: 4000,
         autoHide: true,
       });
 
-
-      // Navigate to OTP screen with phone number
+      // Navigate to OTP screen with registration data
       router.push({
         pathname: '/(auth)/verifyOtp',
-        params: { phone: phoneNumber.toString() }
+        params: {
+          email,
+          registrationData: JSON.stringify(variables.registrationData)
+        }
       });
       
     } catch (error: any) {
@@ -85,28 +82,30 @@ const registerMutation = useMutation({
         text2: error?.message || 'Please try again',
         position: 'top',
         visibilityTime: 4000,
-        autoHide: true,
-      });
-      console.log(data.user.phone_number)
-      router.push({
-        pathname: '/(auth)/verifyOtp',
-        params: { phone: data.user.phone_number }
       });
     }
   },
   onError: (error: any) => {
-    const errorMessage = error?.message || 'Registration failed';
     Toast.show({
       type: 'error',
-      text1: 'Registration Failed',
-      text2: errorMessage,
+      text1: 'Failed to Send OTP',
+      text2: error?.message || 'Please try again',
       position: 'top',
       visibilityTime: 4000,
-      autoHide: true,
     });
-    console.log('Registration failed:', error);
   },
 });
+
+// Update handleRegister function
+const handleRegister = async (values: RegisterFormValues) => {
+  const { confirmPassword, ...registrationData } = values;
+  
+  // First send OTP to email
+  registerMutation.mutate({ 
+    email: values.email,
+    registrationData // Pass registration data to be used after verification
+  });
+};
   interface RegisterFormValues {
     full_name: string;
     email: string;
@@ -115,10 +114,6 @@ const registerMutation = useMutation({
     confirmPassword: string;
   }
   
-  const handleRegister = async (values: RegisterFormValues) => {
-    const { confirmPassword, ...registrationData } = values;
-    registerMutation.mutate(registrationData);
-  };
 
   return (
     <KeyboardAvoidingView
@@ -127,7 +122,7 @@ const registerMutation = useMutation({
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <See style={styles.logo} width={230} height={48} />
+        <Image source={require("../../assets/images/images/WordLogo.png")}  resizeMode="contain" style={styles.wordLogo}/>
           <Text style={styles.title}>Fill in your details</Text>
         </View>
 
@@ -168,33 +163,14 @@ const registerMutation = useMutation({
                   }}
                   error={touched.full_name ? errors.full_name : undefined}                />
 
-                <Input
-                  label="Email Address"
-                  placeholder="Enter your email address"
-                  value={values.email}
-                  onChangeText={handleChange('email')}
-                  onBlur={() => {
-                    setFieldTouched('email', true);
-                    handleBlur('email');
-                    console.log('Email Blur - Error:', errors.email);
-                  }}
-                  error={touched.email ? errors.email : undefined}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
+                <PhoneNumberInput
+                  label="Phone Number"
+                  value={values.phone_number}
+                  onChangeText={(text) => setFieldValue('phone_number', text)}
+                  
+                  error={touched.phone_number ? errors.phone_number : undefined}
                 />
 
-                <Input
-                  label="Phone Number"
-                  placeholder="Enter your phone number"
-                  value={values.phone_number}
-                  onChangeText={handleChange('phone_number')}
-                  onBlur={() => {
-                    setFieldTouched('phone_number', true);
-                    handleBlur('phone_number');
-                  }}
-                  error={touched.phone_number ? errors.phone_number : undefined}
-                  keyboardType="phone-pad"
-                />
 
                 <Input
                   label="Password"
@@ -281,14 +257,15 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xl,
     marginBottom: SPACING.xl,
   },
-  logo: {
-    marginBottom: SPACING.alt,
-    alignSelf: 'center',
+  wordLogo: {
+    width: 230,
+    height: 74,
+    alignSelf:'center',
   },
   title: {
     ...TEXT_STYLES.h1,
     color: COLOR_VARIABLES.textSurfaceGen,
-    marginBottom: SPACING.sm,
+    marginVertical: SPACING.sm,
   },
   form: {
     gap: SPACING.md,
@@ -315,7 +292,7 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontFamily: TEXT_STYLES.title.fontFamily, 
-    color: COLOR_VARIABLES.textsurfaceSecondary,
+    color: COLOR_VARIABLES.textSurfaceSecondary,
   },
   terms: {
     ...TEXT_STYLES.caption,
@@ -325,7 +302,7 @@ const styles = StyleSheet.create({
   },
   termsLink: {
     fontFamily: TEXT_STYLES.title.fontFamily, 
-    color: COLOR_VARIABLES.textsurfaceSecondary,
+    color: COLOR_VARIABLES.textSurfaceSecondary,
   },
   toast: {
     padding: SPACING.md,

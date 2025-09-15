@@ -28,3 +28,12 @@ declare module "*.svg" {
   
     export default function Onboarding(props: Props): JSX.Element;
   }
+
+  declare module 'react-native-phone-call' {
+  interface CallArgs {
+    number: string;
+    prompt?: boolean;
+  }
+  
+  export default function call(args: CallArgs): Promise<void>;
+}

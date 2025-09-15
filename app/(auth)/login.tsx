@@ -6,6 +6,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -21,7 +22,9 @@ import See from '@/assets/icons/See.svg';
 import { authService } from '@/services/auth';
 import { useAuthStore } from '@/shared/stores/useAuthStore';
 import { useRoleStore } from '@/shared/stores/useRoleStore';
+import { useServiceStore } from '@/shared/stores/useServiceStore';
 import { serviceService } from '@/services/services';
+import { useWebSocketStore } from '@/shared/stores/useWebsocketStore';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -39,56 +42,65 @@ interface LoginFormValues {
 export default function LoginScreen() {
   const { setAuth } = useAuthStore();
   const { selectedRole } = useRoleStore();
-
+  const { setServices } = useServiceStore();
+  const { connect } = useWebSocketStore();
   const loginMutation = useMutation({
     mutationFn: authService.login,
-    onSuccess: async (data) => {
-      // Set auth token
-      setAuth(data.access_token);
+   onSuccess: async (data) => {
+  const { user } = data;
+  setAuth(data.access_token, user);
 
-      // Show success toast
-      Toast.show({
-        type: 'success',
-        text1: 'Login Successful',
-        text2: 'Welcome back!',
-        position: 'top',
-        visibilityTime: 4000,
-      });
+  // Determine role
+  const roleType = selectedRole === 'worker' ? 'worker' : 'customer';
 
-      // Navigate based on role
-      if (selectedRole === 'worker') {
-        const services = await serviceService.getServices();
-        if (services.length > 0) {
-          router.replace('/(worker)/home');
-        } else {
-          router.replace('/onboarding/selectService');
-        }
-      } else {
-        router.replace('/(client)/home');
-      }
-    },
+  // Connect WebSocket immediately after login
+  connect(data.access_token, roleType);
+
+  Toast.show({
+    type: 'success',
+    text1: 'Login Successful',
+    text2: 'Welcome back!',
+    position: 'top',
+    visibilityTime: 4000,
+  });
+
+  const services = await serviceService.getServices();
+  setServices(services);
+
+  if (selectedRole === 'worker') {
+    if (user.is_worker) {
+      router.replace('/(tabs)/home');
+    } else {
+      router.replace('/onboarding/selectService');
+    }
+  } else {
+    router.replace('/(tabs)/home');
+  }
+},
     onError: async (error: any) => {
-      Toast.show({
-        type: 'error',
-        text1: 'Login Failed',
-        text2: error?.message || 'Please check your credentials',
-        position: 'top',
-        visibilityTime: 4000,
-      });
 
-       // Navigate based on role
-       if (selectedRole === 'worker') {
-        const services = await serviceService.getServices();
-        if (services.length > 0) {
-          router.replace('/onboarding/selectService');
-        } else {
-          router.replace('/onboarding/selectService');
-        }
-      } else {
-        router.replace('/(client)/home');
-      }
-    
-    },
+
+  let apiMessage = 'Please check your credentials';
+  if (error.response?.data) {
+    if (typeof error.response.data === 'string') {
+      apiMessage = error.response.data;
+    } else if (error.response.data.message) {
+      apiMessage = error.response.data.message;
+    } else if (error.response.data.detail) {
+      apiMessage = error.response.data.detail;
+    } else if (Array.isArray(error.response.data.errors) && error.response.data.errors[0]?.message) {
+      apiMessage = error.response.data.errors[0].message;
+    }
+  }
+
+  Toast.show({
+    type: 'error',
+    text1: 'Login Failed',
+    text2: apiMessage,
+    position: 'top',
+    visibilityTime: 4000,
+  });
+},
   });
 
   const handleLogin = (values: LoginFormValues) => {
@@ -102,7 +114,7 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <See style={styles.logo} width={230} height={48} />
+        <Image source={require("../../assets/images/images/WordLogo.png")}  resizeMode="contain" style={styles.wordLogo}/>
           <Text style={styles.title}>Welcome Back!</Text>
         </View>
 
@@ -199,8 +211,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     
   },
-  logo: {
-    marginBottom: SPACING.xxl,
+  wordLogo: {
+    width: 230,
+    height: 74,
     alignSelf:'center',
   },
   title: {
@@ -216,7 +229,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     ...TEXT_STYLES.body,
-    color: COLOR_VARIABLES.textsurfaceSecondary,
+    color: COLOR_VARIABLES.textSurfaceSecondary,
     textAlign: 'right',
     
   },
@@ -231,6 +244,6 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontFamily: TEXT_STYLES.title.fontFamily,
-    color: COLOR_VARIABLES.textsurfaceSecondary,
+    color: COLOR_VARIABLES.textSurfaceSecondary,
   },
 });

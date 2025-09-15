@@ -23,7 +23,13 @@ const Button: React.FC<ButtonProps> = ({ text, onPress, variant = "primary", dis
       {loading ? (
         <ActivityIndicator color={COLOR_VARIABLES.buttonText} />
       ) : (
-        <Text style={[TEXT_STYLES.buttonText, variant === "text" && styles.textButton]}>
+        <Text
+          style={[
+            TEXT_STYLES.buttonText,
+            variant === "text" && styles.textButton,
+            variant === "outline" && styles.outlineText, // ← Add this line
+          ]}
+        >
           {text}
         </Text>
       )}
@@ -46,10 +52,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR_VARIABLES.surfaceButton, // Blue
   },
   outline: {
-    borderWidth: 2,
-    borderColor: COLOR_VARIABLES.surfaceGen,
+    borderWidth: 1,
+    borderColor: COLOR_VARIABLES.surfaceSecondary,
     backgroundColor: "transparent",
+   
   },
+  outlineText: {
+    color: COLOR_VARIABLES.surfaceSecondary, 
+  },
+  
   text: {
     backgroundColor: "transparent",
   },

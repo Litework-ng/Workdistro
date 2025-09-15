@@ -8,13 +8,16 @@ import Eye from "@/assets/icons/Eye.svg"
 interface InputFieldProps extends Omit<TextInputProps, 'onChangeText'> {
   placeholder: string;
   value: string;
-  onChangeText: (text: string) => void;
+  onChangeText?: (text: string) => void;
   label?: string;
   error?: string;
-  onBlur?: () => void;
+  onBlur?: (e: any) => void;
   rightIcon?: React.ReactNode;
   leftIcon?: React.ReactNode;
   secureTextEntry?: boolean;
+  multiline?: boolean;
+  maxLength?: number;
+  showCharacterCount?: boolean;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -27,6 +30,9 @@ const InputField: React.FC<InputFieldProps> = ({
   rightIcon,
   leftIcon,
   secureTextEntry = false,
+  multiline = false,
+  maxLength,
+  showCharacterCount = false,
   ...restProps
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -62,10 +68,12 @@ const InputField: React.FC<InputFieldProps> = ({
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => {
+          onBlur={(e) => {
             setIsFocused(false);
-            onBlur?.();
+            onBlur?.(e);
           }}
+          multiline={multiline}
+          maxLength={maxLength}
           {...restProps}
         />
 
@@ -82,11 +90,17 @@ const InputField: React.FC<InputFieldProps> = ({
       </View>
 
      
-      {error ? (
-        <Text style={styles.errorText}>
-          {error}
-        </Text>
-      ) : null}
+      <View style={styles.bottomContainer}>
+        {error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : null}
+        
+        {showCharacterCount && maxLength && (
+          <Text style={styles.characterCount}>
+            {value.length}/{maxLength}
+          </Text>
+        )}
+      </View>
     </View>
   );
 };
@@ -117,7 +131,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...TEXT_STYLES.body,
-    color: COLOR_VARIABLES.textsurfaceSecondary,
+    color: COLOR_VARIABLES.textSurfaceSecondary,
   },
   inputWithLeftIcon: {
     marginLeft: SPACING.sm,
@@ -143,6 +157,24 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
     minHeight: 16, // Keeps space reserved for error text
   },
+  multilineContainer: {
+    minHeight: 120,
+    paddingVertical: SPACING.md,
+  },
+  multilineInput: {
+    height: 'auto',
+    textAlignVertical: 'top',
+  },
+  bottomContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.xs,
+  },
+  characterCount: {
+    ...TEXT_STYLES.caption,
+    color: COLOR_VARIABLES.textShade,
+  }
 });
 
 export default InputField;

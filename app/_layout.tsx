@@ -8,11 +8,13 @@ import {
   Manrope_400Regular,
   Manrope_600SemiBold,
   Manrope_700Bold,
+  Manrope_500Medium,
 } from "@expo-google-fonts/manrope";
 import { useAuthStore } from '@/shared/stores/useAuthStore';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Toast, { BaseToast, ToastProps, ErrorToast } from 'react-native-toast-message';
 import { COLOR_VARIABLES } from '@/constants/theme/ColorVariables';
+import { useWebSocketEvents } from '@/shared/hooks/useWebsocketEvent';
 
 const toastConfig = {
   success: (props: ToastProps) => (
@@ -74,13 +76,16 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+   useWebSocketEvents();
   const [fontsLoaded, error] = useFonts({
     ManropeRegular: Manrope_400Regular,
     ManropeSemiBold: Manrope_600SemiBold,
     ManropeBold: Manrope_700Bold,
+    ManropeMedium: Manrope_500Medium,
   });
   const { selectedRole } = useRoleStore();
-  const { isAuthenticated } = useAuthStore();
+  // const { isAuthenticated } = useAuthStore();
+  
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -101,18 +106,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(auth)" />
-        <Stack.Screen 
-          name="(client)" 
-          options={{
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen 
-          name="(worker)" 
-          options={{
-            headerShown: false,
-          }}
-        />
+       
       </Stack>
       <Toast config={toastConfig} />
     </QueryClientProvider>

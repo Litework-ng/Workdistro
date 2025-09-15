@@ -13,7 +13,7 @@ export const COLOR_TOKENS = {
 
   
     gray: {
-      250: "#6B6B6B",
+      250: "#A4A4A4",
       400: "#7E7E7E",
       600: "#EFEFEF",
       800: "#595959",
@@ -34,5 +34,9 @@ export const COLOR_TOKENS = {
       400: "#1F1F1F",  
       300: "#1A1A1A", 
     },
+
+    yellow:{
+      500: "#FFD337",
+    }
   };
   

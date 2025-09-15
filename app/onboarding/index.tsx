@@ -9,28 +9,19 @@ import {
   Image
 } from "react-native";
 import Swiper from "react-native-swiper";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLOR_VARIABLES } from "@/constants/theme/ColorVariables";
 import { TEXT_STYLES } from "@/constants/theme/Typography";
 import { SPACING } from "@/constants/theme/Spacing";
-import OnboardingOne from "@/assets/icons/OnboardingOne.svg";
-import OnboardingTwo from "@/assets/icons/OnboardingTwo.svg";
-import Copy from "@/assets/icons/Copy.svg";
-import Frame from "@/assets/icons/Frame.svg";
-import Lice from "@/assets/icons/SlideImg1.svg"
-import Live from "@/assets/icons/Live.svg";
-import Kopo from "@/assets/icons/Kopo.svg";
-import See from "@/assets/icons/See.svg";
-import Flat from "@/assets/icons/Flat.svg";
 import Button from "@/components/Button";
 import RoleSelector from  "./roleSelector";
 import { useRoleStore } from '@/shared/stores/useRoleStore';
 
-
 const OnboardingScreen = () => {
   const swiperRef = useRef<Swiper>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { initialIndex } = useLocalSearchParams<{ initialIndex?: string }>();
+  const [currentIndex, setCurrentIndex] = useState(Number(initialIndex) || 0);
   const { selectedRole } = useRoleStore(); 
 
   const handleComplete = async () => {
@@ -92,18 +83,17 @@ const OnboardingScreen = () => {
   };
 
   const slides = [
-    {
-      icon: <Lice width={300} height={300} />,
+    { image: require("@/assets/images/images/SlideImage1.png"),
       title: "Delegate Tasks The Easy Way",
       description: "Find handy workers to help with your tasks, whatever they are, wherever you are.",
     },
     {
-      icon: <Kopo width={300} height={300} />,
+      image: require("@/assets/images/images/SlideImage2.png"),
       title: "Turn Your Skills To Earnings",
       description: "Connect with people who need your skills close to you.",
     },
     {
-      icon: <OnboardingTwo width={300} height={300} />,
+      
       title: "How Will You Be Using Workdistro Today?",
       description: "Don't worry, you can switch later in settings.",
     },
@@ -112,8 +102,8 @@ const OnboardingScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}> 
-        <See style={styles.logo} width={230} height={48}/>
-        {currentIndex !== slides.length - 1 && (
+      <Image source={require("../../assets/images/images/logo.png")}  resizeMode="contain" style={styles.wordLogo}/>
+      {currentIndex !== slides.length - 1 && (
           <TouchableOpacity 
             style={styles.skipButton} 
             onPress={handleSkip}
@@ -127,6 +117,7 @@ const OnboardingScreen = () => {
         ref={swiperRef}
         loop={false}
         showsPagination={false}
+        index={currentIndex}
         onIndexChanged={setCurrentIndex}
       >
             {slides.map((slide, index) => (
@@ -138,8 +129,9 @@ const OnboardingScreen = () => {
                 <Text style={styles.description}>{slide.description}</Text>
               </View>
               <View>
-                {slide.icon}
+                {slide.image}
               </View>
+              <Image source={slide.image} style={styles.image} resizeMode="contain"  />
             </>
           ) : (
             <View style={styles.fullCustom}>
@@ -171,7 +163,7 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     position: 'absolute',
-    top: SPACING.xl,
+    top: SPACING.md,
     right: SPACING.lg,
     zIndex: 1,
   },
@@ -217,6 +209,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: SPACING.lg,
   },
+  image: {
+    width: 300,
+    height: 300,
+    marginVertical: SPACING.md,
+    alignSelf: 'center',
+  },
+  wordLogo: {
+    width: 230,
+    height: 48,
+  },
+  
   paginationDot: {
     width: 10,
     height: 10,

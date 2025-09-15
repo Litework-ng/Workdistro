@@ -1,9 +1,11 @@
 import { COLOR_VARIABLES } from "./ColorVariables";
 export const FONT_FAMILY = {
   header: "ManropeBold",
+  subHeader:"ManropeMedium",
   body: "ManropeRegular",
   title:"ManropeSemiBold",
   button: "ManropeBold",
+
 };
 
 export const FONT_SIZE = {
@@ -42,9 +44,16 @@ export const TEXT_STYLES = {
     fontFamily: FONT_FAMILY.body,
   },
 
+  header:{
+    fontSize: FONT_SIZE.lg,
+    color: COLOR_VARIABLES.textSurfacePrimary,
+    fontFamily: FONT_FAMILY.button,
+
+  },
+
   subHeader: {
     fontSize: FONT_SIZE.xl,
-    fontFamily:FONT_FAMILY.title,
+    fontFamily:FONT_FAMILY.subHeader,
     color: COLOR_VARIABLES.textSurfacePrimary,
   },
   body: {

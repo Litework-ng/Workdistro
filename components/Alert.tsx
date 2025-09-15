@@ -9,20 +9,22 @@ import ArrowBack from '@/assets/icons/ArrowBack.svg';
 interface AlertProps {
   visible: boolean;
   onClose: () => void;
-  variant: 'info' | 'action' | 'action2';
+  variant: 'info' | 'action' | 'action2' | 'delete';
   icon?: React.ReactNode;
   title: string;
-  description: string;
+  description: string | React.ReactNode;
   showBackIcon?: boolean;
   primaryAction?: {
     label: string;
     onPress: () => void;
     loading?: boolean;
+    disabled?: boolean;
   };
   secondaryAction?: {
     label: string;
     onPress: () => void;
     loading?: boolean;
+    disabled?: boolean;
   };
 }
 
@@ -60,22 +62,27 @@ export const Alert: React.FC<AlertProps> = ({
             {/* Content Section */}
             <View style={styles.textContent}>
               <Text style={styles.title}>{title}</Text>
-              <Text style={styles.description}>{description}</Text>
+                {typeof description === "string" ? (
+                    <Text style={styles.description}>{description}</Text>
+                  ) : (
+                    description
+                  )}
             </View>
 
             {/* Actions Section */}
-            {(variant === 'action' || variant === 'action2') && (
+            {(variant === 'action' || variant === 'action2' || variant === 'delete') && (
               <View style={[
                 styles.actions,
-                variant === 'action2' && styles.actionsDouble
+                (variant === 'action2' || variant === 'delete') && styles.actionsDouble,
               ]}>
-                {variant === 'action2' && secondaryAction && (
+                 {variant !== 'action' && secondaryAction && (
                   <Button
                     text={secondaryAction.label}
                     onPress={secondaryAction.onPress}
                     loading={secondaryAction.loading}
+                    disabled={secondaryAction.disabled}
                     variant="outline"
-                    fullWidth={variant !== 'action2'}
+                    fullWidth
                   />
                 )}
                 {primaryAction && (
@@ -83,7 +90,8 @@ export const Alert: React.FC<AlertProps> = ({
                     text={primaryAction.label}
                     onPress={primaryAction.onPress}
                     loading={primaryAction.loading}
-                    variant="secondary"
+                    disabled={primaryAction.disabled}
+                    variant={variant === 'delete' ? 'danger' : 'secondary'}
                     fullWidth={variant !== 'action2'}
                   />
                 )}
@@ -110,7 +118,7 @@ const styles = StyleSheet.create({
   content: {
     backgroundColor: COLOR_VARIABLES.surfacePrimary,
     borderRadius: 8,
-    padding: SPACING.lg,
+    padding: SPACING.xl,
     borderWidth: 1,
     borderColor: COLOR_VARIABLES.borderPrimary,
   },
@@ -121,7 +129,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   iconContainer: {
-    marginVertical: SPACING.md,
+    marginVertical: SPACING.xl,
     alignItems: 'center',
   },
   textContent: {
@@ -135,15 +143,15 @@ const styles = StyleSheet.create({
   },
   description: {
     ...TEXT_STYLES.description,
-
     textAlign: 'center',
+    marginBottom: SPACING.md,
   },
   actions: {
     gap: SPACING.md,
   },
   actionsDouble: {
-    flexDirection: 'row',
+    flexDirection: 'column-reverse', 
     justifyContent: 'space-between',
-    gap: SPACING.sm,
+    gap: SPACING.md,
   },
 });

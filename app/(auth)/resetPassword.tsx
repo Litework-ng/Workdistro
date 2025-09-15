@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 
@@ -25,16 +25,28 @@ import ResetPasswordIcon from '@/assets/icons/Lock.svg';
 const validationSchema = Yup.object().shape({
   otp: Yup.string()
     .required('OTP is required')
-    .length(6, 'OTP must be 6 digits'),
+    .matches(/^\d{4}$/, 'OTP must be 4 digits'),
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    )
     .required('Password is required'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password')], 'Passwords must match')
     .required('Please confirm your password'),
 });
+interface ResetPasswordFormValues {
+  email: string;
+  otp: string;
+  password: string;
+  confirmPassword: string;
+}
 
 export default function ResetPasswordScreen() {
+  const { email } = useLocalSearchParams<{ email: string }>();
+
   const resetPasswordMutation = useMutation({
     mutationFn: authService.resetPassword,
     onSuccess: () => {
@@ -58,14 +70,11 @@ export default function ResetPasswordScreen() {
     },
   });
 
-  interface ResetPasswordFormValues {
-    otp: string;
-    password: string;
-    confirmPassword: string;
-  }
+ 
 
   const handleResetPassword = (values: ResetPasswordFormValues) => {
     resetPasswordMutation.mutate({
+      email: values.email,
       otp: values.otp,
       password: values.password,
     });
@@ -83,12 +92,12 @@ export default function ResetPasswordScreen() {
             <ResetPasswordIcon width={98} height={98}  />
           </View>
           <Text style={styles.subtitle}>
-            Enter the 6-digit code sent to your phone and create a new password.
+            Enter the 4-digit code sent to your phone and create a new password.
           </Text>
         </View>
 
         <Formik
-          initialValues={{ otp: '', password: '', confirmPassword: '' }}
+          initialValues={{ email: email || '', otp: '', password: '', confirmPassword: '' }}
           validationSchema={validationSchema}
           onSubmit={handleResetPassword}
           validateOnChange
@@ -105,8 +114,8 @@ export default function ResetPasswordScreen() {
           }) => (
             <View style={styles.form}>
               <Input
-                label="OTP"
-                placeholder="Enter OTP"
+                label="OTP Code"
+                placeholder="Enter 4-digit code"
                 value={values.otp}
                 onChangeText={handleChange('otp')}
                 onBlur={() => {
@@ -115,6 +124,7 @@ export default function ResetPasswordScreen() {
                 }}
                 error={touched.otp ? errors.otp : undefined}
                 keyboardType="number-pad"
+                maxLength={4}
               />
 
               <Input
@@ -142,6 +152,13 @@ export default function ResetPasswordScreen() {
                 }}
                 error={touched.confirmPassword ? errors.confirmPassword : undefined}
               />
+              <View style={styles.passwordHelperContainer}>
+                <Text style={styles.passwordHelperText}>Password must contain:</Text>
+                <Text style={styles.passwordRequirement}>• At least 8 characters</Text>
+                <Text style={styles.passwordRequirement}>• One uppercase letter</Text>
+                <Text style={styles.passwordRequirement}>• One lowercase letter</Text>
+                <Text style={styles.passwordRequirement}>• One number</Text>
+              </View>
 
               <View style={styles.footer}>
                 <Button
@@ -212,6 +229,21 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontFamily: TEXT_STYLES.title.fontFamily,
-    color: COLOR_VARIABLES.textsurfaceSecondary,
+    color: COLOR_VARIABLES.textSurfaceSecondary,
+  },
+  passwordHelperContainer: {
+    marginTop: -SPACING.sm,
+    marginBottom: SPACING.md,
+    paddingHorizontal: SPACING.xs,
+  },
+  passwordHelperText: {
+    ...TEXT_STYLES.caption,
+    color: COLOR_VARIABLES.textShade,
+    marginBottom: SPACING.xs,
+  },
+  passwordRequirement: {
+    ...TEXT_STYLES.caption,
+    color: COLOR_VARIABLES.textShade,
+    marginLeft: SPACING.sm,
   },
 });

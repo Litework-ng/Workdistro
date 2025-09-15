@@ -23,17 +23,18 @@ import Lock from '@/assets/icons/Lock.svg';
 import Header from '@/components/Header';
 
 const validationSchema = Yup.object().shape({
-  phone_number: Yup.string()
-  .min(11, 'Phone number must be 11 digits')
-    .max(11, 'Phone number must be 11 digits')
-    .matches(/^[0-9]+$/, 'Phone number must only contain digits')
-    .required('Phone number is required'),
+  email: Yup.string()
+    .email('Please enter a valid email')
+    .required('Email is required'),
 });
 
+interface ForgotPasswordFormValues {
+  email: string;
+}
 export default function ForgotPasswordScreen() {
   const forgotPasswordMutation = useMutation({
     mutationFn: authService.forgotPassword,
-    onSuccess: (data) => {
+    onSuccess: (_, variables) => {
       Toast.show({
         type: 'success',
         text1: 'Email Sent',
@@ -42,7 +43,10 @@ export default function ForgotPasswordScreen() {
         visibilityTime: 4000,
         autoHide: true,
       });
-      router.push('/(auth)/login');
+       router.push({
+        pathname: '/(auth)/resetPassword',
+        params: { email: variables.email }
+      });
     },
     onError: (error: any) => {
       Toast.show({
@@ -53,16 +57,13 @@ export default function ForgotPasswordScreen() {
         visibilityTime: 4000,
         autoHide: true,
       });
-      router.push('/(auth)/resetPassword');
+      
     },
   });
 
-  interface ForgotPasswordFormValues {
-    phone_number: string;
-  }
 
   const handleForgotPassword = (values: ForgotPasswordFormValues) => {
-    forgotPasswordMutation.mutate({ phone_number: values.phone_number });
+    forgotPasswordMutation.mutate({ email: values.email });
   };
 
   return (
@@ -77,12 +78,12 @@ export default function ForgotPasswordScreen() {
             <Lock />
          </View>
           <Text style={styles.subtitle}>
-            Please enter your phone number below and we will send you a code.
+            Please enter your email below and we will send you a code.
           </Text>
         </View>
 
         <Formik
-          initialValues={{phone_number: '' }}
+          initialValues={{email: '' }}
           validationSchema={validationSchema}
           onSubmit={handleForgotPassword}
           validateOnChange
@@ -99,16 +100,18 @@ export default function ForgotPasswordScreen() {
           }) => (
             <View style={styles.form}>
              <Input
-                label="Phone Number"
-                placeholder="Enter your phone number"
-                value={values.phone_number}
-                onChangeText={handleChange('phone_number')}
+                label="Email"
+                placeholder="Enter your email"
+                value={values.email}
+                onChangeText={handleChange('email')}
                 onBlur={() => {
-                    setFieldTouched('phone_number', true);
-                    handleBlur('phone_number');
+                    setFieldTouched('email', true);
+                    handleBlur('email');
                 }}
-                error={touched.phone_number ? errors.phone_number : undefined}
-                keyboardType="phone-pad"
+                error={touched.email ? errors.email : undefined}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                
             />
 
               <View style={styles.footer}>
@@ -183,6 +186,6 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontFamily: TEXT_STYLES.title.fontFamily,
-    color: COLOR_VARIABLES.textsurfaceSecondary,
+    color: COLOR_VARIABLES.textSurfaceSecondary,
   },
 });

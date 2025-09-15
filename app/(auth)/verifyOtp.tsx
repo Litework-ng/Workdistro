@@ -21,6 +21,7 @@ import Button from '@/components/Button';
 import { authService } from '@/services/auth';
 import ArrowBack from '@/assets/icons/ArrowBack.svg';
 import { Alert } from '@/components/Alert';
+import { useAuthStore } from '@/shared/stores/useAuthStore';
 
 import { useRoleStore } from '@/shared/stores/useRoleStore';
 import SuccessIcon from '@/assets/icons/Success.svg';
@@ -33,6 +34,7 @@ export default function VerifyOtpScreen() {
   const formattedPhone = phone ? String(phone).replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3') : '';
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const { selectedRole } = useRoleStore();
+  const { setAuth } = useAuthStore();
   
   
   useEffect(() => {
@@ -51,24 +53,48 @@ export default function VerifyOtpScreen() {
     return () => clearInterval(timer);
   }, []);
 
+  const { email, registrationData } = useLocalSearchParams<{ 
+    email: string;
+    registrationData: string;
+  }>();
+  const parsedRegistrationData = JSON.parse(registrationData);
+
+
   const verifyMutation = useMutation({
-    mutationFn: authService.verifyOtp,
-    onSuccess: () => {
-      setShowSuccessAlert(true);
-    },
-    onError: (error: any) => {
-      const errorMessage = error?.message || 'Verification failed';
-      Toast.show({
-        type: 'error',
-        text1: 'Verification Failed',
-        text2: errorMessage,
-        position: 'top',
-        visibilityTime: 4000,
-      });
-      setShowSuccessAlert(true);
-      console.log(selectedRole)
-    },
-  });
+  mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
+    console.log("🚀 Verifying OTP for email:", email, "with code:", otp);
+
+    const otpResult = await authService.verifyOtp({ email, otp });
+    console.log("📦 OTP verify response:", otpResult);
+
+    const userData = JSON.parse(registrationData);
+    const regResult = await authService.register(userData);
+
+    console.log("📦 Registration response:", regResult);
+    return regResult;
+  },
+  onSuccess: () => {
+    Toast.show({
+      type: 'success',
+      text1: 'Registration Successful',
+      text2: 'Please login with your credentials',
+      position: 'top',
+      visibilityTime: 4000,
+    });
+    router.replace('/(auth)/login');
+  },
+  onError: (error: any) => {
+    console.error("❌ OTP verify failed:", error.response?.data || error.message);
+    Toast.show({
+      type: 'error',
+      text1: 'Verification Failed',
+      text2: error?.response?.data?.message || error?.message || 'Please try again',
+      position: 'top',
+      visibilityTime: 4000,
+    });
+  },
+});
+
 
   const resendMutation = useMutation({
     mutationFn: authService.sendOtp,
@@ -76,7 +102,7 @@ export default function VerifyOtpScreen() {
       Toast.show({
         type: 'success',
         text1: 'OTP sent',
-        text2: 'Please check your phone',
+        text2: 'Please check your email',
         position: 'top',
         visibilityTime: 4000,
       });
@@ -96,13 +122,17 @@ export default function VerifyOtpScreen() {
 
   const handleVerifyOtp = () => {
     if (otp.length !== 4) return;
-    verifyMutation.mutate({ otp });
+    verifyMutation.mutate({ email, otp });
+  };
+  const handleResendOtp = () => {
+    if (isResendDisabled) return;
+    resendMutation.mutate({ email, registrationData: parsedRegistrationData });
   };
 
   const handleNavigation = () => {
     setShowSuccessAlert(false);
     if (selectedRole === 'worker') {
-      router.push('/onboarding/selectService');
+      router.push('/(auth)/login');
     } else {
       router.replace('/(auth)/login');
     }
@@ -151,7 +181,7 @@ export default function VerifyOtpScreen() {
             <View style={styles.resendContainer}>
               <Text style={styles.resendText}>Didn't receive the code?</Text>
               <TouchableOpacity
-                onPress={() => resendMutation.mutate({ phone_number: String(phone) })}
+                onPress={handleResendOtp}
                 disabled={isResendDisabled || resendMutation.isPending}
               >
                 <Text style={[styles.resendLink, isResendDisabled && styles.disabledText]}>
